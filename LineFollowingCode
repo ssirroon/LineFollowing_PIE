@@ -1,0 +1,45 @@
+#include <Adafruit_MotorShield.h>
+
+#define RIGHT_PIN A0
+#define LEFT_PIN A1
+
+Adafruit_MotorShield motorSheild = Adafruit_MotorShield();
+
+Adafruit_DCMotor *rightMotor = motorSheild.getMotor(1);
+Adafruit_DCMotor *leftMotor = motorSheild.getMotor(2);
+
+int offset;
+float sensor_scaling = 0.1;
+float r_value, l_value;
+
+float input = 0; 
+
+void setup() {
+  Serial.begin(9600);           // set up Serial library at 9600 bps
+  
+  if (!motorSheild.begin()) {         
+    Serial.println("Could not find Motor Shield. Check wiring.");
+    while (1);
+  } Serial.println("Motor Shield found.");
+}
+
+void loop() {
+
+  if (Serial.available() > 0) {
+    input = Serial.parseFloat();
+    if (input > 0) {sensor_scaling = input;};
+  }
+  
+  r_value = analogRead(RIGHT_PIN);
+  l_value = analogRead(LEFT_PIN);
+
+  offset = sensor_scaling * (r_value - l_value);
+
+  if(offset>20) {offset = 19;}
+
+  rightMotor->setSpeed(20-offset);
+  leftMotor->setSpeed(20+offset);
+
+  rightMotor->run(BACKWARD);
+  leftMotor->run(FORWARD);
+}
